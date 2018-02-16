@@ -5,5 +5,6 @@
     "\\include\\rc",
     "\\src"
   ],
+  "SelectedNode": "\\src\\rc_test_mavlink_heartbeat.cpp",
   "PreviewInSolutionExplorer": false
 }

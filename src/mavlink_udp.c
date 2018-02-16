@@ -24,7 +24,8 @@
 //#include <sys/socket.h>
 #include <WinSock2.h>
 #include <string.h>
-#include <rc/mavlink_udp.h>
+#include "../include/rc/mavlink_udp.h"
+
 
 #define BUFFER_LENGTH		512 // common networking buffer size
 #define MAX_UNIQUE_MSG_TYPES	256

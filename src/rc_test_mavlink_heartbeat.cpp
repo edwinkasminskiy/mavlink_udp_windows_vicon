@@ -77,40 +77,35 @@ int main(int argc, char * argv[])
 		return -1;
 	}
 	//Set up client to read data from Vicon
-	Client MyClient;
+	ViconDataStreamSDK::CPP::Client MyClient;
+	MyClient.Connect("localhost");
+	Output_EnableSegmentData SegmentData = MyClient.EnableSegmentData();
+	Output_GetSubjectCount OutputGSC;
+	OutputGSC = MyClient.GetSubjectCount();
+
+	Output_GetSubjectName Drone1;
+	Drone1 = MyClient.GetSubjectName(0);
+	Drone1.SubjectName = "Drone 1";
+
+	Output_GetSegmentName CoM;
+	CoM = MyClient.GetSegmentName("CoM", 0);
 
 	running=1;
 	while(running){
 		//Sleep(1000);
 
 		//Use Vicon SDK to get position data
-
-		 class Output_GetSegmentStaticRotationQuaternion
-		 {
-		 public:
-		 Result::Enum Result;
-		 double Rotation[ 4 ];
-		 };
-		
-		 Output_GetSegmentStaticRotationQuaternion
-		 GetSegmentStaticRotationQuaternion(
-		 const String & SubjectName,
-		 const String & SegmentName ) const
-		ViconDataStreamSDK::CPP::Client MyClient;
-		MyClient.Connect("localhost");
 		MyClient.GetFrame();
-		Output_GetSegmentStaticRotationQuaternion Output =
-			MyClient.GetSegmentStaticRotationQuaternion("Alice", "Pelvis");
-
-
-
+		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion("Drone 1", "CoM");
+		
+		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation("Drone 1", "CoM");
 		if(rc_mav_send_heartbeat_abbreviated()){
 			fprintf(stderr,"failed to send heartbeat\n");
 		}
 		else{
 			printf("sent heartbeat\n");
 		}
-		if (rc_mav_get_att_pos_mocap(quat, x_pos, y_pos, z_pos)) {
+		if (rc_mav_get_att_pos_mocap(static_quat.rotation, static_translation.translation[0], static_translation.translation[1], static_translation.translation[2])) {
 			fprintf(stderr, "failed to send position data\n");
 		}
 		else {
