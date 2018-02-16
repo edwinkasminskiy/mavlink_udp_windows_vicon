@@ -79,9 +79,8 @@ int main(int argc, char * argv[])
 	//Set up client to read data from Vicon
 	ViconDataStreamSDK::CPP::Client MyClient;
 	MyClient.Connect("localhost");
-	Output_EnableSegmentData SegmentData = MyClient.EnableSegmentData();
-	Output_GetSubjectCount OutputGSC;
-	OutputGSC = MyClient.GetSubjectCount();
+	MyClient.EnableSegmentData();
+	int OutputGSC = MyClient.GetSubjectCount().SubjectCount;
 
 	Output_GetSubjectName Drone1;
 	Drone1 = MyClient.GetSubjectName(0);
@@ -105,7 +104,7 @@ int main(int argc, char * argv[])
 		else{
 			printf("sent heartbeat\n");
 		}
-		if (rc_mav_get_att_pos_mocap(static_quat.rotation, static_translation.translation[0], static_translation.translation[1], static_translation.translation[2])) {
+		if (rc_mav_send_att_pos_mocap(static_quat.rotation, static_translation.translation[0], static_translation.translation[1], static_translation.translation[2])) {
 			fprintf(stderr, "failed to send position data\n");
 		}
 		else {
