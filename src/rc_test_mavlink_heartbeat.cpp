@@ -77,7 +77,8 @@ int main(int argc, char * argv[])
 		return -1;
 	}
 	//Set up client to read data from Vicon
-	ViconDataStreamSDK::CPP::Client MyClient;
+	using namespace ViconDataStreamSDK::CPP;
+	Client MyClient;
 	MyClient.Connect("localhost");
 	MyClient.EnableSegmentData();
 	int OutputGSC = MyClient.GetSubjectCount().SubjectCount;
@@ -91,12 +92,20 @@ int main(int argc, char * argv[])
 
 	running=1;
 	while(running){
-		//Sleep(1000);
+		Sleep(1000);
 
 		//Use Vicon SDK to get position data
 		MyClient.GetFrame();
 		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion("Drone 1", "CoM");
-		
+		/*
+		for (int i = 0; i < sizeof(static_quat.Rotation), i++) {
+			float q = static_quat.Rotation[0];
+		}*/
+		float q[4];
+		q[0] = static_quat.Rotation[0];
+		q[1] = static_quat.Rotation[1];
+		q[2] = static_quat.Rotation[2];
+		q[3] = static_quat.Rotation[3];
 		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation("Drone 1", "CoM");
 		if(rc_mav_send_heartbeat_abbreviated()){
 			fprintf(stderr,"failed to send heartbeat\n");
@@ -104,14 +113,14 @@ int main(int argc, char * argv[])
 		else{
 			printf("sent heartbeat\n");
 		}
-		if (rc_mav_send_att_pos_mocap(static_quat.rotation, static_translation.translation[0], static_translation.translation[1], static_translation.translation[2])) {
+		if (rc_mav_send_att_pos_mocap(q, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2])) {
 			fprintf(stderr, "failed to send position data\n");
 		}
 		else {
-			printf("quaternion: \n"
-				"x coordinate: \n"
-				"y coordinate: \n"
-				"z coordinate: \n");
+			printf("quaternion: %f \n"
+				"x coordinate: %f \n"
+				"y coordinate: %f \n"
+				"z coordinate: %f \n", q, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2]);
 		}
 	}
 
