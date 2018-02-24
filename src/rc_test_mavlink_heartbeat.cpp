@@ -80,6 +80,11 @@ int main(int argc, char * argv[])
 	using namespace ViconDataStreamSDK::CPP;
 	Client MyClient;
 	MyClient.Connect("localhost");
+
+	MyClient.SetAxisMapping(Direction::Forward,
+		Direction::Left,
+		Direction::Up); // Z-up
+
 	MyClient.EnableSegmentData();
 	int OutputGSC = MyClient.GetSubjectCount().SubjectCount;
 
@@ -120,7 +125,7 @@ int main(int argc, char * argv[])
 			printf("quaternion: %f \n"
 				"x coordinate: %f \n"
 				"y coordinate: %f \n"
-				"z coordinate: %f \n", q, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2]);
+				"z coordinate: %f \n", static_quat.Rotation, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2]);
 		}
 	}
 

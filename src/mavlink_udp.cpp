@@ -185,7 +185,7 @@ int rc_mav_send_msg(mavlink_message_t msg)
 		fprintf(stderr, "ERROR: in rc_mav_send_msg, unable to pack message for sending\n");
 		return -1;
 	}
-	int bytes_sent = sendto(sock_fd, buf, msg_len, 0, (struct sockaddr *) &dest_address,
+	int bytes_sent = sendto(sock_fd, (char*)buf, msg_len, 0, (struct sockaddr *) &dest_address,
 							sizeof dest_address);
 	if(bytes_sent != msg_len){
 		perror("ERROR: in rc_mav_send_msg: failed to write to UDP socket\n");
