@@ -103,6 +103,8 @@ int main(int argc, char * argv[])
 
 		//Use Vicon SDK to get position data
 		MyClient.GetFrame();
+		Output_GetFrameNumber Frames_Since_Boot;
+		Frames_Since_Boot = MyClient.GetFrameNumber();
 		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion("Drone 1", "CoM");
 		/*
 		for (int i = 0; i < sizeof(static_quat.Rotation), i++) {
@@ -128,7 +130,8 @@ int main(int argc, char * argv[])
 			printf("quaternion: %f \n"
 				"x coordinate: %f \n"
 				"y coordinate: %f \n"
-				"z coordinate: %f \n", static_quat.Rotation, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2]);
+				"z coordinate: %f \n"
+				"Frames since boot: %f \n", static_quat.Rotation, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2]), Frames_Since_Boot.FrameNumber;
 		}
 	}
 

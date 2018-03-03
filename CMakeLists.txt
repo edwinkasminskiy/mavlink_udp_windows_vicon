@@ -14,4 +14,4 @@ include/rc/DataStreamClient.h
 
 add_executable(rc_test_mavlink_heartbeat ${mavlink_src})
 target_link_libraries(rc_test_mavlink_heartbeat Ws2_32.lib  ${PROJECT_SOURCE_DIR}/lib/ViconDataStreamSDK_CPP.lib )
-message('hello')
+
