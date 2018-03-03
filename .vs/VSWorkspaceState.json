@@ -1,10 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\dll",
     "\\include",
     "\\include\\rc",
     "\\src"
   ],
+  "SelectedNode": "\\src\\rc_test_mavlink_heartbeat.c",
   "PreviewInSolutionExplorer": false
 }
