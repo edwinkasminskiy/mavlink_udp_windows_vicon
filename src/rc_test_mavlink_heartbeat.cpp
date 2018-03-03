@@ -29,6 +29,7 @@
 #include "../include/rc/mavlink_udp_helpers.h"
 #include "../include/rc/DataStreamClient.h"
 
+
 #define LOCALHOST_IP	"127.0.0.1"
 #define DEFAULT_SYS_ID	1
 
@@ -85,7 +86,8 @@ int main(int argc, char * argv[])
 		Direction::Left,
 		Direction::Up); // Z-up
 
-	MyClient.EnableSegmentData();
+	MyClient.EnableSegmentData();
+
 	int OutputGSC = MyClient.GetSubjectCount().SubjectCount;
 
 	Output_GetSubjectName Drone1;
@@ -111,7 +113,8 @@ int main(int argc, char * argv[])
 		q[1] = static_quat.Rotation[1];
 		q[2] = static_quat.Rotation[2];
 		q[3] = static_quat.Rotation[3];
-		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation("Drone 1", "CoM");
+		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation("Drone 1", "CoM");
+
 		if(rc_mav_send_heartbeat_abbreviated()){
 			fprintf(stderr,"failed to send heartbeat\n");
 		}
@@ -132,4 +135,6 @@ int main(int argc, char * argv[])
 	// stop listening thread and close UDP port
 	printf("closing UDP port\n");
 	rc_mav_cleanup();
+
+	//sdfgsdfg
 }

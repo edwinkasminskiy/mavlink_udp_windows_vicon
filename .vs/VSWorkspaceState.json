@@ -3,6 +3,7 @@
     "",
     "\\include",
     "\\include\\rc",
+    "\\lib",
     "\\src"
   ],
   "SelectedNode": "\\src\\rc_test_mavlink_heartbeat.cpp",

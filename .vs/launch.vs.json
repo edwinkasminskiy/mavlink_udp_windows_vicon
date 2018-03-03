@@ -7,6 +7,11 @@
       "project": "CMakeLists.txt",
       "projectTarget": "rc_test_mavlink_heartbeat-cmake.exe",
       "name": "rc_test_mavlink_heartbeat-cmake.exe"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "name": "CMakeLists.txt"
     }
   ]
 }
