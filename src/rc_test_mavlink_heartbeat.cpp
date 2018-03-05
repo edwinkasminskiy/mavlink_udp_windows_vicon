@@ -102,14 +102,17 @@ int main(int argc, char * argv[])
 		Sleep(1000);
 
 		//Use Vicon SDK to get position data
-		MyClient.GetFrame();
+		std::cout << "Waiting for new frame...";
+		while (MyClient.GetFrame().Result != Result::Success)
+		{
+			// Sleep a little so that we don't lumber the CPU with a busy poll
+			Sleep(200);
+			std::cout << ".";
+		}
 		Output_GetFrameNumber Frames_Since_Boot;
 		Frames_Since_Boot = MyClient.GetFrameNumber();
 		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion("Drone 1", "CoM");
-		/*
-		for (int i = 0; i < sizeof(static_quat.Rotation), i++) {
-			float q = static_quat.Rotation[0];
-		}*/
+
 		float q[4];
 		q[0] = static_quat.Rotation[0];
 		q[1] = static_quat.Rotation[1];
