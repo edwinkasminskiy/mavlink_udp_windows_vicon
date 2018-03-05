@@ -38,7 +38,7 @@ uint8_t my_sys_id;
 uint16_t port;
 int running;
 
-
+#define output_stream std::cout 
 // interrupt handler to catch ctrl-c
 void signal_handler(int dummy)
 {
@@ -90,13 +90,54 @@ int main(int argc, char * argv[])
 	Output_GetSubjectCount OutputGSC;
 	OutputGSC = MyClient.GetSubjectCount();
 	Output_GetSubjectName OutputGSN;
-	
+	unsigned int SubjectCount = MyClient.GetSubjectCount().SubjectCount;
+	output_stream << "Subjects (" << SubjectCount << "):" << std::endl;
+	for (unsigned int SubjectIndex = 0; SubjectIndex < SubjectCount; ++SubjectIndex)
+	{
+		output_stream << "  Subject #" << SubjectIndex << std::endl;
+
+		// Get the subject name
+		std::string SubjectName = MyClient.GetSubjectName(SubjectIndex).SubjectName;
+		output_stream << "    Name: " << SubjectName << std::endl;
+
+		// Get the root segment
+		std::string RootSegment = MyClient.GetSubjectRootSegmentName(SubjectName).SegmentName;
+		output_stream << "    Root Segment: " << RootSegment << std::endl;
+
+		// Count the number of segments
+		unsigned int SegmentCount = MyClient.GetSegmentCount(SubjectName).SegmentCount;
+		output_stream << "    Segments (" << SegmentCount << "):" << std::endl;
+		for (unsigned int SegmentIndex = 0; SegmentIndex < SegmentCount; ++SegmentIndex)
+		{
+			output_stream << "      Segment #" << SegmentIndex << std::endl;
+
+			// Get the segment name
+			std::string SegmentName = MyClient.GetSegmentName(SubjectName, SegmentIndex).SegmentName;
+			output_stream << "        Name: " << SegmentName << std::endl;
+
+			// Get the segment parent
+			std::string SegmentParentName = MyClient.GetSegmentParentName(SubjectName, SegmentName).SegmentName;
+			output_stream << "        Parent: " << SegmentParentName << std::endl;
+
+			// Get the segment's children
+			unsigned int ChildCount = MyClient.GetSegmentChildCount(SubjectName, SegmentName).SegmentCount;
+			output_stream << "     Children (" << ChildCount << "):" << std::endl;
+			for (unsigned int ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
+			{
+				std::string ChildName = MyClient.GetSegmentChildName(SubjectName, SegmentName, ChildIndex).SegmentName;
+				output_stream << "       " << ChildName << std::endl;
+			}
+		}
+	}
+	/*
 	std::cout << "Current Subjects:" << std::endl;
-	
-	for (int i = 0; i < OutputGSC.SubjectCount; i++) {
-		OutputGSN = MyClient.GetSubjectName(i);
-		std::cout <<	OutputGSN.SubjectName << std::endl;
+
+	for (int i = 0; i < OutputGSC.SubjectCount; ++i) {
+	OutputGSN = MyClient.GetSubjectName(i);
+	std::cout <<	OutputGSN.SubjectName << std::endl;
 	};
+	*/
+
 	std::cout << "Enter the index of the object you want to track:";
 	int n;
 	std::cin >> n;
