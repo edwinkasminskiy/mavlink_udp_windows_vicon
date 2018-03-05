@@ -127,11 +127,15 @@ int main(int argc, char * argv[])
 			fprintf(stderr, "failed to send position data\n");
 		}
 		else {
-			printf("quaternion: %f \n"
-				"x coordinate: %f \n"
-				"y coordinate: %f \n"
-				"z coordinate: %f \n"
-				"Frames since boot: %f \n", static_quat.Rotation, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2]), Frames_Since_Boot.FrameNumber;
+			std ::cout << "Static Rotation Quaternion: (" << q[0] << ", "
+				<< q[1] << ", "
+				<< q[2] << ", "
+				<< q[3] << ")" << std::endl
+				<< "Static Translation: (" << static_translation.Translation[0] << ","
+				<< static_translation.Translation[1] << ","
+				<< static_translation.Translation[2] << ")" << std::endl
+				<< "Frames since boot: " << Frames_Since_Boot.FrameNumber << std::endl;
+
 		}
 	}
 

@@ -6,6 +6,6 @@
     "\\lib",
     "\\src"
   ],
-  "SelectedNode": "\\src\\rc_test_mavlink_heartbeat.cpp",
+  "SelectedNode": "\\CMakeLists.txt",
   "PreviewInSolutionExplorer": false
 }
