@@ -87,16 +87,30 @@ int main(int argc, char * argv[])
 		Direction::Up); // Z-up
 
 	MyClient.EnableSegmentData();
-
-	int OutputGSC = MyClient.GetSubjectCount().SubjectCount;
-
+	Output_GetSubjectCount OutputGSC;
+	OutputGSC = MyClient.GetSubjectCount();
+	Output_GetSubjectName OutputGSN;
+	
+	std::cout << "Current Subjects:" << std::endl;
+	
+	for (int i = 0; i < OutputGSC.SubjectCount; i++) {
+		OutputGSN = MyClient.GetSubjectName(i);
+		std::cout <<	OutputGSN.SubjectName << std::endl;
+	};
+	std::cout << "Enter the index of the object you want to track:";
+	int n;
+	std::cin >> n;
+	OutputGSN = MyClient.GetSubjectName(n);
+	#define SubjectName OutputGSN.SubjectName
+	std::cout << "Tracked object:" << SubjectName << std::endl;
+	/*
 	Output_GetSubjectName Drone1;
 	Drone1 = MyClient.GetSubjectName(0);
 	Drone1.SubjectName = "Drone 1";
-
-	Output_GetSegmentName CoM;
-	CoM = MyClient.GetSegmentName("CoM", 0);
-
+	*/
+	Output_GetSubjectRootSegmentName OutputGSRS;
+	OutputGSRS = MyClient.GetSubjectRootSegmentName(SubjectName);
+	#define SegmentName OutputGSRS.SegmentName
 	running=1;
 	while(running){
 		Sleep(1000);
@@ -111,14 +125,14 @@ int main(int argc, char * argv[])
 		}
 		Output_GetFrameNumber Frames_Since_Boot;
 		Frames_Since_Boot = MyClient.GetFrameNumber();
-		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion("Drone 1", "CoM");
+		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion(SubjectName, SegmentName);
 
 		float q[4];
 		q[0] = static_quat.Rotation[0];
 		q[1] = static_quat.Rotation[1];
 		q[2] = static_quat.Rotation[2];
 		q[3] = static_quat.Rotation[3];
-		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation("Drone 1", "CoM");
+		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation(SubjectName, SegmentName);
 
 		if(rc_mav_send_heartbeat_abbreviated()){
 			fprintf(stderr,"failed to send heartbeat\n");
