@@ -80,12 +80,12 @@ int main(int argc, char * argv[])
 	//Set up client to read data from Vicon
 	using namespace ViconDataStreamSDK::CPP;
 	Client MyClient;
-	MyClient.Connect("localhost");
+	MyClient.Connect("localhost:801");
 
 	MyClient.SetAxisMapping(Direction::Forward,
 		Direction::Left,
 		Direction::Up); // Z-up
-
+	MyClient.EnableMarkerData();
 	MyClient.EnableSegmentData();
 	Output_GetSubjectCount OutputGSC;
 	OutputGSC = MyClient.GetSubjectCount();
