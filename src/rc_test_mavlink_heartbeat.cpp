@@ -80,21 +80,58 @@ int main(int argc, char * argv[])
 	//Set up client to read data from Vicon
 	using namespace ViconDataStreamSDK::CPP;
 	Client MyClient;
-	MyClient.Connect("localhost:801");
+	bool ok = (MyClient.Connect("localhost:801").Result == Result::Success);
+	
+	if (!ok)
+	{
+		std::cout << "Warning - connect failed..." << std::endl;
+	}
 
 	MyClient.SetAxisMapping(Direction::Forward,
 		Direction::Left,
 		Direction::Up); // Z-up
-	MyClient.EnableMarkerData();
-	MyClient.EnableSegmentData();
+    MyClient.EnableSegmentData();
+    MyClient.EnableMarkerData();
+    MyClient.EnableUnlabeledMarkerData();
+    MyClient.EnableMarkerRayData();
+    MyClient.EnableDeviceData();
+    MyClient.EnableDebugData();
 	Output_GetSubjectCount OutputGSC;
 	OutputGSC = MyClient.GetSubjectCount();
 	Output_GetSubjectName OutputGSN;
 	unsigned int SubjectCount = MyClient.GetSubjectCount().SubjectCount;
+	
+	/*
+	std::cout << "Current Subjects:" << std::endl;
+
+	for (int i = 0; i < OutputGSC.SubjectCount; ++i) {
+	OutputGSN = MyClient.GetSubjectName(i);
+	std::cout <<	OutputGSN.SubjectName << std::endl;
+	};
+	*/
+
+
+	
+	/*
+	Output_GetSubjectName Drone1;
+	Drone1 = MyClient.GetSubjectName(0);
+	Drone1.SubjectName = "Drone 1";
+	*/
+
+
+	while (SubjectCount < 1) {
+		if(MyClient.GetFrame().Result != Result::Success){
+			continue;
+		}
+		SubjectCount = MyClient.GetSubjectCount().SubjectCount;
+	}
 	output_stream << "Subjects (" << SubjectCount << "):" << std::endl;
+
+
+
 	for (unsigned int SubjectIndex = 0; SubjectIndex < SubjectCount; ++SubjectIndex)
 	{
-		output_stream << "  Subject #" << SubjectIndex << std::endl;
+		output_stream << "  Subject #" << SubjectIndex+1 << std::endl;
 
 		// Get the subject name
 		std::string SubjectName = MyClient.GetSubjectName(SubjectIndex).SubjectName;
@@ -129,30 +166,18 @@ int main(int argc, char * argv[])
 			}
 		}
 	}
-	/*
-	std::cout << "Current Subjects:" << std::endl;
-
-	for (int i = 0; i < OutputGSC.SubjectCount; ++i) {
-	OutputGSN = MyClient.GetSubjectName(i);
-	std::cout <<	OutputGSN.SubjectName << std::endl;
-	};
-	*/
+	
 
 	std::cout << "Enter the index of the object you want to track:";
 	int n;
 	std::cin >> n;
+	n--;
 	OutputGSN = MyClient.GetSubjectName(n);
-	#define SubjectName OutputGSN.SubjectName
-	std::cout << "Tracked object:" << SubjectName << std::endl;
-	/*
-	Output_GetSubjectName Drone1;
-	Drone1 = MyClient.GetSubjectName(0);
-	Drone1.SubjectName = "Drone 1";
-	*/
 	Output_GetSubjectRootSegmentName OutputGSRS;
-	OutputGSRS = MyClient.GetSubjectRootSegmentName(SubjectName);
-	#define SegmentName OutputGSRS.SegmentName
+	OutputGSRS = MyClient.GetSubjectRootSegmentName(OutputGSN.SubjectName);
+	std::cout << "Subject Name: " << OutputGSN.SubjectName << " , Root Segment Name: " << OutputGSRS.SegmentName << std::endl;
 	running=1;
+	
 	while(running){
 		Sleep(1000);
 
@@ -166,14 +191,14 @@ int main(int argc, char * argv[])
 		}
 		Output_GetFrameNumber Frames_Since_Boot;
 		Frames_Since_Boot = MyClient.GetFrameNumber();
-		Output_GetSegmentStaticRotationQuaternion static_quat = MyClient.GetSegmentStaticRotationQuaternion(SubjectName, SegmentName);
+		Output_GetSegmentGlobalRotationQuaternion global_quat = MyClient.GetSegmentGlobalRotationQuaternion(OutputGSN.SubjectName, OutputGSRS.SegmentName);
 
 		float q[4];
-		q[0] = static_quat.Rotation[0];
-		q[1] = static_quat.Rotation[1];
-		q[2] = static_quat.Rotation[2];
-		q[3] = static_quat.Rotation[3];
-		Output_GetSegmentStaticTranslation static_translation =	MyClient.GetSegmentStaticTranslation(SubjectName, SegmentName);
+		q[0] = global_quat.Rotation[0];
+		q[1] = global_quat.Rotation[1];
+		q[2] = global_quat.Rotation[2];
+		q[3] = global_quat.Rotation[3];
+		Output_GetSegmentGlobalTranslation global_translation =	MyClient.GetSegmentGlobalTranslation(OutputGSN.SubjectName, OutputGSRS.SegmentName);
 
 		if(rc_mav_send_heartbeat_abbreviated()){
 			fprintf(stderr,"failed to send heartbeat\n");
@@ -181,17 +206,17 @@ int main(int argc, char * argv[])
 		else{
 			printf("sent heartbeat\n");
 		}
-		if (rc_mav_send_att_pos_mocap(q, static_translation.Translation[0], static_translation.Translation[1], static_translation.Translation[2])) {
+		if (rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2])) {
 			fprintf(stderr, "failed to send position data\n");
 		}
 		else {
-			std ::cout << "Static Rotation Quaternion: (" << q[0] << ", "
+			std ::cout << "global Rotation Quaternion: (" << q[0] << ", "
 				<< q[1] << ", "
 				<< q[2] << ", "
 				<< q[3] << ")" << std::endl
-				<< "Static Translation: (" << static_translation.Translation[0] << ","
-				<< static_translation.Translation[1] << ","
-				<< static_translation.Translation[2] << ")" << std::endl
+				<< "global Translation: (" << global_translation.Translation[0] << ","
+				<< global_translation.Translation[1] << ","
+				<< global_translation.Translation[2] << ")" << std::endl
 				<< "Frames since boot: " << Frames_Since_Boot.FrameNumber << std::endl;
 
 		}
