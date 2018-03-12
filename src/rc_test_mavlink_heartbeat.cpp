@@ -22,6 +22,7 @@
 #include <ctype.h> // for isprint()
 #include <iostream>
 #include <stdio.h>
+#include <string>
 #include <stdlib.h>
 #include <Windows.h>
 #include <signal.h> // to SIGINT signal handler
@@ -49,9 +50,18 @@ void signal_handler(int dummy)
 int main(int argc, char * argv[])
 {
 	// set default options before checking options
-	dest_ip=LOCALHOST_IP;
 	my_sys_id=DEFAULT_SYS_ID;
 	port=RC_MAV_DEFAULT_UDP_PORT;
+
+	std::cout << "Enter the IP address of your drone (type default for the localhost IP): ";
+	std::string ip_input;
+	std::getline(std::cin, ip_input);
+	if (ip_input == "default"){
+		dest_ip = LOCALHOST_IP;
+	}
+	else {
+		dest_ip = ip_input.c_str();
+	}
 
 	// parse arguments
 	/*
@@ -170,7 +180,14 @@ int main(int argc, char * argv[])
 
 	std::cout << "Enter the index of the object you want to track:";
 	int n;
-	std::cin >> n;
+	while (true) {
+		std::cin >> n;
+		if (n > 0 && n <= SubjectCount) {
+			break;
+		}
+		std::cout << "Not a valid subject index. Please enter a number between 1 and " << SubjectCount << "." << std::endl;
+		std::cout << "Enter the index of the object you want to track:";
+	}
 	n--;
 	OutputGSN = MyClient.GetSubjectName(n);
 	Output_GetSubjectRootSegmentName OutputGSRS;
