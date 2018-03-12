@@ -98,8 +98,8 @@ int main(int argc, char * argv[])
 	}
 
 	MyClient.SetAxisMapping(Direction::Forward,
-		Direction::Left,
-		Direction::Up); // Z-up
+		Direction::Right,
+		Direction::Down); // NED
     MyClient.EnableSegmentData();
     MyClient.EnableMarkerData();
     MyClient.EnableUnlabeledMarkerData();
@@ -111,23 +111,6 @@ int main(int argc, char * argv[])
 	Output_GetSubjectName OutputGSN;
 	unsigned int SubjectCount = MyClient.GetSubjectCount().SubjectCount;
 	
-	/*
-	std::cout << "Current Subjects:" << std::endl;
-
-	for (int i = 0; i < OutputGSC.SubjectCount; ++i) {
-	OutputGSN = MyClient.GetSubjectName(i);
-	std::cout <<	OutputGSN.SubjectName << std::endl;
-	};
-	*/
-
-
-	
-	/*
-	Output_GetSubjectName Drone1;
-	Drone1 = MyClient.GetSubjectName(0);
-	Drone1.SubjectName = "Drone 1";
-	*/
-
 
 	while (SubjectCount < 1) {
 		if(MyClient.GetFrame().Result != Result::Success){
@@ -196,7 +179,7 @@ int main(int argc, char * argv[])
 	running=1;
 	
 	while(running){
-		
+		char dest_ip[64], name[64];
 
 		//Use Vicon SDK to get position data
 		//std::cout << "Waiting for new frame...";
@@ -208,24 +191,33 @@ int main(int argc, char * argv[])
 		Frames_Since_Boot = MyClient.GetFrameNumber();
 		Output_GetSegmentGlobalRotationQuaternion global_quat = MyClient.GetSegmentGlobalRotationQuaternion(OutputGSN.SubjectName, OutputGSRS.SegmentName);
 
-		float q[4];
-		q[0] = global_quat.Rotation[0];
-		q[1] = global_quat.Rotation[1];
-		q[2] = global_quat.Rotation[2];
-		q[3] = global_quat.Rotation[3];
-		Output_GetSegmentGlobalTranslation global_translation =	MyClient.GetSegmentGlobalTranslation(OutputGSN.SubjectName, OutputGSRS.SegmentName);
-		/*
-		if(rc_mav_send_heartbeat_abbreviated()){
-		fprintf(stderr,"failed to send heartbeat\n");
-		}
-		else{
-		printf("sent heartbeat\n");
-		}
-		*/
-		
-		
-		if (rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2])==-1){
-			fprintf(stderr, "failed to send position data\n");
+		for (objects in frame) {
+
+			if (scanf(OutputGSN.SubjectName, "%s:%s", name, dest_ip) != 2) {
+				fprintf(stderr, "ERROR failed to parse subjectname, received:\n");
+				fprintf(stderr, "%s\n", OutputGSN.SubjectName);
+				continue;
+			}
+			rc_mav_set_dest_ip(dest_ip);
+			float q[4];
+			q[0] = global_quat.Rotation[0];
+			q[1] = global_quat.Rotation[1];
+			q[2] = global_quat.Rotation[2];
+			q[3] = global_quat.Rotation[3];
+			Output_GetSegmentGlobalTranslation global_translation = MyClient.GetSegmentGlobalTranslation(OutputGSN.SubjectName, OutputGSRS.SegmentName);
+			/*
+			if(rc_mav_send_heartbeat_abbreviated()){
+			fprintf(stderr,"failed to send heartbeat\n");
+			}
+			else{
+			printf("sent heartbeat\n");
+			}
+			*/
+
+
+			if (rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]) == -1) {
+				fprintf(stderr, "failed to send position data\n");
+			}
 		}
 		/*
 		else {
