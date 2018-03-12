@@ -196,16 +196,14 @@ int main(int argc, char * argv[])
 	running=1;
 	
 	while(running){
-		Sleep(1000);
+		
 
 		//Use Vicon SDK to get position data
-		std::cout << "Waiting for new frame...";
-		while (MyClient.GetFrame().Result != Result::Success)
-		{
-			// Sleep a little so that we don't lumber the CPU with a busy poll
-			Sleep(200);
-			std::cout << ".";
+		//std::cout << "Waiting for new frame...";
+		if(MyClient.GetFrame().Result != Result::Success){
+			continue;
 		}
+
 		Output_GetFrameNumber Frames_Since_Boot;
 		Frames_Since_Boot = MyClient.GetFrameNumber();
 		Output_GetSegmentGlobalRotationQuaternion global_quat = MyClient.GetSegmentGlobalRotationQuaternion(OutputGSN.SubjectName, OutputGSRS.SegmentName);
@@ -216,16 +214,20 @@ int main(int argc, char * argv[])
 		q[2] = global_quat.Rotation[2];
 		q[3] = global_quat.Rotation[3];
 		Output_GetSegmentGlobalTranslation global_translation =	MyClient.GetSegmentGlobalTranslation(OutputGSN.SubjectName, OutputGSRS.SegmentName);
-
+		/*
 		if(rc_mav_send_heartbeat_abbreviated()){
-			fprintf(stderr,"failed to send heartbeat\n");
+		fprintf(stderr,"failed to send heartbeat\n");
 		}
 		else{
-			printf("sent heartbeat\n");
+		printf("sent heartbeat\n");
 		}
-		if (rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2])) {
+		*/
+		
+		
+		if (rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2])==-1){
 			fprintf(stderr, "failed to send position data\n");
 		}
+		/*
 		else {
 			std ::cout << "global Rotation Quaternion: (" << q[0] << ", "
 				<< q[1] << ", "
@@ -237,11 +239,12 @@ int main(int argc, char * argv[])
 				<< "Frames since boot: " << Frames_Since_Boot.FrameNumber << std::endl;
 
 		}
+		*/
 	}
 
 	// stop listening thread and close UDP port
 	printf("closing UDP port\n");
 	rc_mav_cleanup();
 
-	//sdfgsdfg
+	return 0;
 }
