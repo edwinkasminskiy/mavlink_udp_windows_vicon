@@ -23,6 +23,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 #include <stdlib.h>
 #include <Windows.h>
 #include <signal.h> // to SIGINT signal handler
@@ -72,7 +73,7 @@ int main(int argc, char * argv[])
 	Client MyClient;
 	bool ok = (MyClient.Connect("localhost:801").Result == Result::Success);
 
-	if (!ok)
+	while(!ok)
 	{
 		std::cout << "Warning - connect failed..." << std::endl;
 	}
@@ -96,7 +97,8 @@ int main(int argc, char * argv[])
 	{
 		if (MyClient.GetFrame().Result != Result::Success)
 		{
-			continue;
+			output_stream << "Waiting for new frame..." << std::endl;
+			//continue;
 		}
 		SubjectCount = MyClient.GetSubjectCount().SubjectCount;
 	}
@@ -145,15 +147,17 @@ int main(int argc, char * argv[])
 	running = 1;
 
 	int heartbeat_timer = 0;
-	int heartbeat_rate = 10; //send 1 heartbeat every X frames. increase to reduce heartbeat frequency.
+	int heartbeat_rate = 5; //send 1 heartbeat every X frames. increase to reduce heartbeat frequency.
+
+	output_stream << "Starting data stream" << std::endl;
 	while (running)
 	{
 		//Increment heartbeat timer, get a frame
-		Sleep(1000);
+		
 		heartbeat_timer++;
-		char dest_ip[64], drone_name[64];
-		const char* subject_char;
-
+		const char* dest_ip;
+		std::string ip_string;
+		std::string drone_name;
 		//Use Vicon SDK to get position data
 		//std::cout << "Waiting for new frame...";
 		if (MyClient.GetFrame().Result != Result::Success)
@@ -172,14 +176,26 @@ int main(int argc, char * argv[])
 
 			// Get the subject name
 			std::string SubjectName = MyClient.GetSubjectName(SubjectIndex).SubjectName;
-			subject_char = SubjectName.c_str();
-			if (scanf(subject_char, "%s:%s", drone_name, dest_ip) != 2)
+			
+			output_stream << "    Object: " << SubjectName << std::endl;
+			std::istringstream iss(SubjectName);
+			while (iss.good())
 			{
-				fprintf(stderr, "ERROR failed to parse subjectname, received:\n");
-				fprintf(stderr, "%s\n", SubjectName);
-				continue;
+				getline(iss, ip_string, '@');
 			}
-			output_stream << "    Name: " << drone_name;
+			dest_ip = ip_string.c_str();
+			drone_name = SubjectName;
+			/*
+
+			if (scanf(SubjectName.c_str(), "%s@%s", drone_name, dest_ip) != 2)
+			{
+			fprintf(stderr, "ERROR failed to parse subjectname, received:");
+			fprintf(stderr, "%s\n", SubjectName);
+			continue;
+			}
+			*/
+
+			output_stream << "    Object Name: " << drone_name << std::endl;
 			output_stream << "    IP address: " << dest_ip << std::endl;
 			// Get the root segment
 			std::string RootSegment = MyClient.GetSubjectRootSegmentName(SubjectName).SegmentName;
@@ -188,7 +204,8 @@ int main(int argc, char * argv[])
 			// initialize the UDP port and listening thread with the rc_mav lib
 			if (rc_mav_init(my_sys_id, dest_ip, port) < 0)
 			{
-				return -1;
+				//return -1;
+				
 			}
 			rc_mav_set_dest_ip(dest_ip);
 
@@ -230,7 +247,7 @@ int main(int argc, char * argv[])
 				printf("sent heartbeat\n");
 			}
 		}
-
+		Sleep(1000);
 	}
 
 
