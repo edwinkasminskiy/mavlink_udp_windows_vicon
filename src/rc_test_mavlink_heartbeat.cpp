@@ -50,11 +50,29 @@ void signal_handler(int dummy)
 
 int main(int argc, char * argv[])
 {
+	//Set up client to read data from Vicon
+	using namespace ViconDataStreamSDK::CPP;
+	Output_GetSegmentGlobalRotationQuaternion global_quat;
+	float q[4];
+	Client MyClient;
+	bool ok;
+	int ret;
+	const char* dest_ip;
+	Output_GetSegmentGlobalTranslation global_translation;
+	Output_GetFrameNumber Frames_Since_Boot;
+	std::string ip_string;
+	std::string drone_name;
 	// set default options before checking options
 	my_sys_id = DEFAULT_SYS_ID;
 	port = RC_MAV_DEFAULT_UDP_PORT;
+	dest_ip = "127.0.0.1";
 
+	// initialize the UDP port and listening thread with the rc_mav lib
+	if (rc_mav_init(my_sys_id, dest_ip, port) < 0)
+	{
+		return -1;
 
+	}
 	printf("run with -h option to see usage and other options\n");
 	// inform the user what settings are being used
 	printf("\n");
@@ -68,10 +86,7 @@ int main(int argc, char * argv[])
 	signal(SIGINT, signal_handler);
 
 
-	//Set up client to read data from Vicon
-	using namespace ViconDataStreamSDK::CPP;
-	Client MyClient;
-	bool ok = (MyClient.Connect("localhost:801").Result == Result::Success);
+	ok = (MyClient.Connect("localhost:801").Result == Result::Success);
 
 	while(!ok)
 	{
@@ -146,18 +161,9 @@ int main(int argc, char * argv[])
 
 	running = 1;
 
-	int heartbeat_timer = 0;
-	int heartbeat_rate = 5; //send 1 heartbeat every X frames. increase to reduce heartbeat frequency.
-
 	output_stream << "Starting data stream" << std::endl;
 	while (running)
 	{
-		//Increment heartbeat timer, get a frame
-		
-		heartbeat_timer++;
-		const char* dest_ip;
-		std::string ip_string;
-		std::string drone_name;
 		//Use Vicon SDK to get position data
 		//std::cout << "Waiting for new frame...";
 		if (MyClient.GetFrame().Result != Result::Success)
@@ -166,18 +172,18 @@ int main(int argc, char * argv[])
 			continue;
 		}
 
-		Output_GetFrameNumber Frames_Since_Boot;
+		
 		Frames_Since_Boot = MyClient.GetFrameNumber();
 
 		//For every subject, get the name and parse the name and IP address
 		for (unsigned int SubjectIndex = 0; SubjectIndex < SubjectCount; ++SubjectIndex)
 		{
-			output_stream << "  Subject #" << SubjectIndex + 1 << std::endl;
+			//output_stream << "  Subject #" << SubjectIndex + 1 << std::endl;
 
 			// Get the subject name
 			std::string SubjectName = MyClient.GetSubjectName(SubjectIndex).SubjectName;
 			
-			output_stream << "    Object: " << SubjectName << std::endl;
+			//output_stream << "    Object: " << SubjectName << std::endl;
 			std::istringstream iss(SubjectName);
 			while (iss.good())
 			{
@@ -185,70 +191,40 @@ int main(int argc, char * argv[])
 			}
 			dest_ip = ip_string.c_str();
 			drone_name = SubjectName;
-			/*
 
-			if (scanf(SubjectName.c_str(), "%s@%s", drone_name, dest_ip) != 2)
-			{
-			fprintf(stderr, "ERROR failed to parse subjectname, received:");
-			fprintf(stderr, "%s\n", SubjectName);
-			continue;
-			}
-			*/
-
-			output_stream << "    Object Name: " << drone_name << std::endl;
-			output_stream << "    IP address: " << dest_ip << std::endl;
+			//output_stream << "    Object Name: " << drone_name << std::endl;
+			//output_stream << "    IP address: " << dest_ip << std::endl;
 			// Get the root segment
 			std::string RootSegment = MyClient.GetSubjectRootSegmentName(SubjectName).SegmentName;
-			output_stream << "    Root Segment: " << RootSegment << std::endl;
+			//output_stream << "    Root Segment: " << RootSegment << std::endl;
 
-			// initialize the UDP port and listening thread with the rc_mav lib
-			if (rc_mav_init(my_sys_id, dest_ip, port) < 0)
-			{
-				//return -1;
-				
+
+			if (rc_mav_set_dest_ip(dest_ip)) {
+				std::cout << "ERROR setting dest ip\n";
+				continue;
 			}
-			rc_mav_set_dest_ip(dest_ip);
 
-			Output_GetSegmentGlobalRotationQuaternion global_quat = MyClient.GetSegmentGlobalRotationQuaternion(drone_name, RootSegment);
-			float q[4];
+			global_quat = MyClient.GetSegmentGlobalRotationQuaternion(drone_name, RootSegment);
 			q[0] = global_quat.Rotation[0];
 			q[1] = global_quat.Rotation[1];
 			q[2] = global_quat.Rotation[2];
 			q[3] = global_quat.Rotation[3];
 
-			Output_GetSegmentGlobalTranslation global_translation = MyClient.GetSegmentGlobalTranslation(drone_name, RootSegment);
+			global_translation = MyClient.GetSegmentGlobalTranslation(drone_name, RootSegment);
 
-			if (rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]) == -1)
-			{
+			ret = rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]);
+			if(ret == -1){
 				fprintf(stderr, "failed to send position data\n");
+				continue;
 			}
-			else
-			{
-				std::cout << "global Rotation Quaternion: (" << q[0] << ", "
-					<< q[1] << ", "
-					<< q[2] << ", "
-					<< q[3] << ")" << std::endl
-					<< "global Translation: (" << global_translation.Translation[0] << ","
-					<< global_translation.Translation[1] << ","
-					<< global_translation.Translation[2] << ")" << std::endl
-					<< "Frames since boot: " << Frames_Since_Boot.FrameNumber << std::endl;
+			else{
+				printf("\rquat: %4.2f  %4.2f  %4.2f translation (XYZ): %6.4fm %6.4fm %6.4fm", q[0], q[1], q[2], q[3], global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]);
+				fflush(stdout);
 			}
-		}
+		
+		}// end for loop through subjects
 
-		if (heartbeat_timer % heartbeat_rate == 0)
-		{
-			if (rc_mav_send_heartbeat_abbreviated())
-			{
-				fprintf(stderr, "failed to send heartbeat\n");
-			}
-
-			else
-			{
-				printf("sent heartbeat\n");
-			}
-		}
-		Sleep(1000);
-	}
+	} // end while(running)
 
 
 // stop listening thread and close UDP port
