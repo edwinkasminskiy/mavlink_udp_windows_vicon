@@ -1,0 +1,3 @@
+# create basic GUI for selecting which objects to track
+
+# fix error message spam when an object is deselected
