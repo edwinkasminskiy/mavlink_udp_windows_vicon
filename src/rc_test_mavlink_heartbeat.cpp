@@ -53,7 +53,9 @@ int main(int argc, char * argv[])
 	//Set up client to read data from Vicon
 	using namespace ViconDataStreamSDK::CPP;
 	Output_GetSegmentGlobalRotationQuaternion global_quat;
+	Output_GetSegmentGlobalRotationEulerXYZ global_euler;
 	float q[4];
+	float eu[3];
 	Client MyClient;
 	bool ok;
 	int ret;
@@ -93,9 +95,9 @@ int main(int argc, char * argv[])
 		std::cout << "Warning - connect failed..." << std::endl;
 	}
 
-	MyClient.SetAxisMapping(Direction::Forward,
-		Direction::Right,
-		Direction::Down); // NED
+	//MyClient.SetAxisMapping(Direction::Forward,
+		//Direction::Right,
+		//Direction::Up);
 	MyClient.EnableSegmentData();
 	MyClient.EnableMarkerData();
 	MyClient.EnableUnlabeledMarkerData();
@@ -114,6 +116,9 @@ int main(int argc, char * argv[])
 		{
 			output_stream << "Waiting for new frame..." << std::endl;
 			//continue;
+		}
+		else{
+			output_stream << "Scanning Vicon software for subjects..." << std::endl;
 		}
 		SubjectCount = MyClient.GetSubjectCount().SubjectCount;
 	}
@@ -210,6 +215,11 @@ int main(int argc, char * argv[])
 			q[2] = global_quat.Rotation[2];
 			q[3] = global_quat.Rotation[3];
 
+			global_euler = MyClient.GetSegmentGlobalRotationEulerXYZ(drone_name, RootSegment);
+			eu[0] = global_euler.Rotation[0];
+			eu[1] = global_euler.Rotation[1];
+			eu[2] = global_euler.Rotation[2];
+
 			global_translation = MyClient.GetSegmentGlobalTranslation(drone_name, RootSegment);
 
 			ret = rc_mav_send_att_pos_mocap(q, global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]);
@@ -218,7 +228,11 @@ int main(int argc, char * argv[])
 				continue;
 			}
 			else{
-				printf("\rquat: %4.2f  %4.2f  %4.2f translation (XYZ): %6.4fm %6.4fm %6.4fm", q[0], q[1], q[2], q[3], global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]);
+				printf("\r");
+				printf("quat %4.2f  %4.2f  %4.2f %4.2f", q[0], q[1], q[2], q[3]);
+				printf(" euler %4.2f  %4.2f  %4.2f", eu[0], eu[1], eu[2]);
+				printf(" XYZ(mm) %7.0f %7.0f %7.0f", global_translation.Translation[0], global_translation.Translation[1], global_translation.Translation[2]);
+				printf("   ");
 				fflush(stdout);
 			}
 		
