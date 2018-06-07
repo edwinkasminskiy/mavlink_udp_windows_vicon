@@ -187,6 +187,16 @@ int main(int argc, char * argv[])
 		
 		Frames_Since_Boot = MyClient.GetFrameNumber();
 
+		SubjectCount = MyClient.GetSubjectCount().SubjectCount;
+
+		// make sure there are objects to track
+		if (SubjectCount == 0) {
+			printf("\r");
+			printf("ERROR: No objects are selected! Please select an object in the Vicon software to track it.");
+			fflush(stdout);
+		};
+
+
 		//For every subject, get the name and parse the name and IP address
 		for (unsigned int SubjectIndex = 0; SubjectIndex < SubjectCount; ++SubjectIndex)
 		{
